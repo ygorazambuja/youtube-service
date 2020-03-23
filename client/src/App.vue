@@ -1,33 +1,56 @@
 <template>
   <div id="app">
-    <b-container>
-      <b-form inline @submit.prevent="">
-        <b-form-input
-          v-model="linkText"
-          placeholder="Cole o Link do Video"
-        ></b-form-input>
-
-        <b-button variant="primary" @click="download()">Download</b-button>
-      </b-form>
-      <div v-if="isLinkValid()">
+    <b-container fluid="sm">
+      <b-col cols="12">
+        <b-form @submit.prevent="download()">
+          <b-form-input
+            placeholder="YouTube Video Link"
+            v-model="linkText"
+          ></b-form-input>
+          <b-button
+            @click="download()"
+            block
+            variant="outline-primary"
+            style="margin-top: 10px"
+            >DOWNLOAD</b-button
+          >
+        </b-form>
+        <div style="padding: 10px"></div>
+        <div class="text-center">
+          <b-spinner
+            variant="success"
+            label="Spinning"
+            v-if="spinner"
+          ></b-spinner>
+        </div>
+        <b-alert variant="danger" :show="!isLinkValid" dismissible>
+          <h4 class="alert-heading">Well done!</h4>
+          <p>
+            Aww yeah, you successfully read this important alert message. This
+            example text is going to run a bit longer so that you can see how
+            spacing within an alert works with this kind of content.
+          </p>
+          <hr />
+          <p class="mb-0">
+            Whenever you need to, be sure to use margin utilities to keep things
+            nice and tidy.
+          </p>
+        </b-alert>
+        <b-alert variant="success" :show="isLinkValid" dismissible>
+          <h4 class="alert-heading">Link Valido</h4>
+        </b-alert>
         <b-card
-          title="Card Title"
-          img-src="https://picsum.photos/600/300/?image=25"
-          img-alt="Image"
-          img-top
-          tag="article"
-          style="max-width: 20rem;"
-          class="mb-2"
+          :img-src="videoInfo.thumbnail"
+          img-alt="Card image"
+          :title="videoInfo.title"
+          :sub-title="videoInfo.uploader"          
         >
           <b-card-text>
-            Some quick example text to build on the card title and make up the
-            bulk of the card's content.
+
+              {{videoInfo.description}}
           </b-card-text>
         </b-card>
-      </div>
-      <div v-else>
-        Link invalido
-      </div>
+      </b-col>
     </b-container>
   </div>
 </template>
@@ -38,15 +61,23 @@ export default {
   name: "App",
   data() {
     return {
-      linkText: "https://www.youtube.com/watch?v=8BUig7mcFsw",
-      videoInfo: {},
-      validLink: "https://www.youtube.com/watch?"
+      linkText: "",
+      videoInfo: {
+        id: "",
+        uploader: "",
+        channelId: "",
+        thumbnail : ''
+      },
+      validLink: "https://www.youtube.com/watch?v=",
+      isLinkValid: false,
+      spinner: false
     };
   },
   methods: {
     download() {
       const newText = this.linkText.split("watch?v=");
       const url = `http://localhost:3000/watch?v=${newText[1]}`;
+      this.spinner = true;
       axios({
         url: url,
         method: "GET",
@@ -58,10 +89,23 @@ export default {
         link.setAttribute("download", `${newText[1]}.mp4`);
         document.body.appendChild(link);
         link.click();
+        this.spinner = false;
       });
-    },
-    isLinkValid() {
-      return this.linkText.match(this.validLink) ? true : false;
+    }
+  },
+  watch: {
+    linkText: function(value) {
+      if (!value.indexOf(this.validLink)) {
+        this.isLinkValid = true;
+        const newText = this.linkText.split("watch?v=");
+        axios({
+          url: `http://localhost:3000/info/${newText[1]}`,
+          method: "GET",
+          responseType: "json"
+        }).then(response => {
+          this.videoInfo = response.data;
+        });
+      } else this.isLinkValid = false;
     }
   }
 };
