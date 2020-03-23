@@ -21,9 +21,10 @@
             variant="success"
             label="Spinning"
             v-if="spinner"
-          ></b-spinner>
+          >
+          </b-spinner>
         </div>
-        <b-alert variant="danger" :show="!isLinkValid" dismissible>
+        <b-alert variant="warning" :show="!isLinkValid" dismissible>
           <h4 class="alert-heading">Well done!</h4>
           <p>
             Aww yeah, you successfully read this important alert message. This
@@ -40,14 +41,14 @@
           <h4 class="alert-heading">Link Valido</h4>
         </b-alert>
         <b-card
+          v-if="videoInfo.thumbnail"
           :img-src="videoInfo.thumbnail"
           img-alt="Card image"
           :title="videoInfo.title"
-          :sub-title="videoInfo.uploader"          
+          :sub-title="videoInfo.uploader"
         >
           <b-card-text>
-
-              {{videoInfo.description}}
+            {{ videoInfo.description }}
           </b-card-text>
         </b-card>
       </b-col>
@@ -66,7 +67,7 @@ export default {
         id: "",
         uploader: "",
         channelId: "",
-        thumbnail : ''
+        thumbnail: ""
       },
       validLink: "https://www.youtube.com/watch?v=",
       isLinkValid: false,
@@ -96,6 +97,7 @@ export default {
   watch: {
     linkText: function(value) {
       if (!value.indexOf(this.validLink)) {
+        this.videoInfo = {};
         this.isLinkValid = true;
         const newText = this.linkText.split("watch?v=");
         axios({
